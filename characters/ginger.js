@@ -6,7 +6,6 @@
 import { px } from '../engine/fixed.js';
 import { anim } from '../engine/skeleton.js';
 import { SIMEON } from './simeon.js';
-import { chubby } from './chubby.js';
 
 const stats = {
   ...SIMEON.stats,
@@ -78,7 +77,7 @@ const HAIR = [
   '..aaa.............',
 ];
 const rows = (n, fn) => Array.from({ length: n }, (_, i) => fn(i));
-const parts = chubby({
+const parts = {
   ...SIMEON.parts,
   head_neutral: face(),
   head_smile: face([10, 9, 'ppp']),
@@ -121,7 +120,7 @@ const parts = chubby({
   },
   // loose short sleeves to the elbow
   upperArm: { pivot: [2, 0], px: ['TTtuu', 'TTttu', 'TTttu', 'TTxtu', 'TTttu', 'TTttu', 'xTTtx', 'Kkkkl', 'Kkkkl', 'KKkkl', 'Kkkkl', 'Kkkkl', '.Kkk.'] },
-});
+};
 
 const darker = (hex, k) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * k).toString(16).padStart(2, '0')).join('');
 const BASE_COLORS = {
