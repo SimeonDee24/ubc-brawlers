@@ -782,7 +782,7 @@ for (const hold of [0, 30]) {
 // Roster: two fighters, two skins each, sharing every normal attack
 {
   const { CHARACTERS } = await import('../characters/index.js');
-  check('twelve characters with two skins each', CHARACTERS.length === 12 && CHARACTERS.every((c) => c.palettes.length === 2), CHARACTERS.map((c) => c.name + ':' + c.palettes.length).join(' '));
+  check('thirteen characters with two skins each', CHARACTERS.length === 13 && CHARACTERS.every((c) => c.palettes.length === 2), CHARACTERS.map((c) => c.name + ':' + c.palettes.length).join(' '));
   const [sim, kae, luc] = CHARACTERS;
   const shared = ['jab1', 'ftilt', 'utilt', 'dtilt', 'dashAttack', 'nair', 'fair', 'bair', 'uair', 'dair', 'grab'];
   check('Kaelyn shares all normals, grabs and throws with Simeon', shared.every((m) => kae.moves[m] === sim.moves[m]) && kae.throws === sim.throws);
@@ -1486,6 +1486,34 @@ for (const hold of [0, 30]) {
   const c = createMatch({ ...setup, players: [{ charId: 'faybua', alt: 0 }, { charId: 'simeon', alt: 1 }] }); const [ca, cv] = c.fighters; cv.x = ca.x + 14 * FX; cv.facing = -1;
   step(c, [BTN.SPECIAL | BTN.DOWN, 0]); for (let i = 0; i < 5; i++) step(c, [0, 0]); step(c, [0, BTN.ATTACK]); for (let i = 0; i < 50; i++) step(c, [0, 0]);
   check('Serve! counters a hit with a camera flash (no damage to her, at least 8% back)', ca.percent === 0 && cv.percent >= 80, `her ${ca.percent / 10}%, his ${cv.percent / 10}%`);
+}
+
+// Marc: a ski run and a lot of drinks
+{
+  const { getCharacter } = await import('../characters/index.js');
+  const mc = getCharacter('marc'), sim = getCharacter('simeon');
+  check('Marc has his own smashes and specials', ['fsmash', 'usmash', 'dsmash'].every((m) => mc.moves[m] !== sim.moves[m]) && ['neutral', 'side', 'up', 'down'].every((k) => mc.moves[mc.specials[k]] && mc.animations[mc.specials[k]]));
+  const mk = (dx = 26, dy = 0) => { const s = createMatch({ ...setup, players: [{ charId: 'marc', alt: 0 }, { charId: 'simeon', alt: 1 }] }); const [a, v] = s.fighters; v.x = a.x + dx * FX; v.y += dy * FX; if (dy) { v.grounded = 0; v.ground = -1; } return s; };
+  const run = (s, first, n = 80) => { step(s, [first, 0]); for (let i = 0; i < n; i++) step(s, [0, 0]); return s.fighters[1].percent / 10; };
+  TEST_CONFIG.SMASH_FLICK_FRAMES = FLICK;
+  const f = run(mk(26), BTN.SMASH), u = run(mk(3, -40), BTN.SMASH | BTN.UP), d1 = run(mk(-18), BTN.SMASH | BTN.DOWN), d2 = run(mk(18), BTN.SMASH | BTN.DOWN);
+  check('Bottle Smash 17%, Cheers 15%, Spill 14% behind and in front', f === 17 && u === 15 && d1 === 14 && d2 === 14, `${f}% / ${u}% / ${d1}% / ${d2}%`);
+  TEST_CONFIG.SMASH_FLICK_FRAMES = 0;
+  const burp = run(mk(14), BTN.SPECIAL, 60), ski = run(mk(70), BTN.SPECIAL | BTN.RIGHT, 60);
+  const sd = mk(400); const sa = sd.fighters[0], x0 = sa.x; step(sd, [BTN.SPECIAL | BTN.RIGHT, 0]); for (let i = 0; i < 60; i++) step(sd, [0, 0]);
+  const o = mk(400); const oa = o.fighters[0], y0 = oa.y; step(o, [BTN.SPECIAL | BTN.UP, 0]); let top = 0; for (let i = 0; i < 60; i++) { step(o, [0, 0]); top = Math.max(top, (y0 - oa.y) / FX); }
+  check('Shotgun burp 9%; Send It skis into them (11%) and covers ground; Shaken Up rides the spray up', burp === 9 && ski === 11 && (sa.x - x0) / FX > 90 && top > 80 && top < 170,
+    `${burp}% / ${ski}% skied ${Math.round((sa.x - x0) / FX)}px / up ${Math.round(top)}px`);
+  // Shotgun heals 3%, at most once every ten seconds
+  const h = mk(400); const ha = h.fighters[0]; ha.percent = 300;
+  step(h, [BTN.SPECIAL, 0]); for (let i = 0; i < 60; i++) step(h, [0, 0]); const once = ha.percent;
+  step(h, [BTN.SPECIAL, 0]); for (let i = 0; i < 60; i++) step(h, [0, 0]); const twice = ha.percent;
+  check('Shotgun heals 3%, at most once every ten seconds', once === 270 && twice === 270, `${once / 10}% / ${twice / 10}%`);
+  // Keg Stand: pulls a keg, throws it forward, it bursts on them (9%)
+  const k = mk(50); const ka = k.fighters[0];
+  step(k, [BTN.SPECIAL | BTN.DOWN, 0]); for (let i = 0; i < 30; i++) step(k, [0, 0]); const holding = ka.item === 'keg';
+  step(k, [BTN.ATTACK, 0]); for (let i = 0; i < 90; i++) step(k, [0, 0]);
+  check('Keg Stand: holds a keg, throws it, it bursts on them (9%)', holding && k.fighters[1].percent === 90, `holding ${holding}, ${k.fighters[1].percent / 10}%`);
 }
 
 process.exit(fails ? 1 : 0);

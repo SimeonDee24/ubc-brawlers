@@ -784,6 +784,131 @@ export class Renderer {
         }
         ctx.globalAlpha = 1;
       }
+    } else if (g.kind === 'beercan' || g.kind === 'beerjet') {
+      // a beer can (blue and silver) along his fingers; shaken, it sprays
+      const can = () => held(() => {
+        ctx.fillStyle = OUT; ctx.fillRect(-2.4, -0.6, 4.8, 8.4);
+        ctx.fillStyle = '#c9ced8'; ctx.fillRect(-1.8, 0, 3.6, 7.2);
+        ctx.fillStyle = '#2f5fb8'; ctx.fillRect(-1.8, 1.4, 3.6, 4.4);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(-1.8, 3.2, 3.6, 0.8);
+        ctx.fillStyle = '#eef1f5'; ctx.fillRect(-1.8, 0, 1, 7.2);
+      });
+      const a = (s.armF.low * Math.PI) / 180, ox = hx + dir * Math.sin(a) * 8, oy = hy + Math.cos(a) * 8;
+      if (g.kind === 'beercan') {
+        if (fr < (g.active ? g.active[0] : 99)) can();
+        if (fr >= 6 && fr < 16) {   // a dribble down his chin while he slams it
+          ctx.fillStyle = '#ffd25a';
+          for (let k = 0; k < 3; k++) { const y = (fr * 2 + k * 3) % 8; ctx.fillRect(hx + dir * 1 - 0.5, hy + 3 + y, 1, 1.4); }
+        }
+        if (act >= 0) {
+          // the burp: rings rolling out of his mouth, with a few flecks of foam
+          const mx = f.x / FX + dir * (s.neck[0] / FX + 3), my = f.y / FX + s.neck[1] / FX - 4;
+          for (let k = 0; k < 3; k++) {
+            const u = act * 1.25 - k * 0.15; if (u < 0 || u > 1) continue;
+            ctx.globalAlpha = (1 - u) * 0.9; ctx.strokeStyle = k === 0 ? '#fffdf2' : k === 1 ? '#ffd25a' : '#d98a1c'; ctx.lineWidth = 2.2 - k * 0.4;
+            const r = 4 + u * 20;
+            ctx.beginPath(); ctx.arc(mx + dir * (2 + u * 14), my, r, dir > 0 ? -0.9 : Math.PI - 0.9, dir > 0 ? 0.9 : Math.PI + 0.9); ctx.stroke();
+          }
+          for (let k = 0; k < 8; k++) {
+            const j = ((k * 37 + 3) % 11) / 11, d = 4 + act * (14 + j * 18);
+            ctx.globalAlpha = Math.max(0, 1 - act); ctx.fillStyle = k & 1 ? '#fffdf2' : '#ffe8a3';
+            ctx.beginPath(); ctx.arc(mx + dir * d, my + (j - 0.5) * 10 * act + act * act * 6, 1 + j, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+      } else {
+        can();
+        if (fr < (g.active ? g.active[0] : 0)) {
+          // shaking: a few drops flicking off the can
+          ctx.fillStyle = '#fffdf2';
+          for (let k = 0; k < 3; k++) ctx.fillRect(ox + Math.sin(fr * 2.1 + k * 2) * 4, oy - 2 + Math.cos(fr * 1.7 + k) * 3, 1.2, 1.2);
+        } else if (act >= 0) {
+          // the spray he rides: a column of foam and lager straight down from the can
+          for (let k = 0; k < 14; k++) {
+            const j = k / 13, y = oy + 2 + j * 44, w = Math.sin(fr * 0.5 + k * 1.3) * (1 + j * 3);
+            ctx.globalAlpha = Math.max(0, (1 - act * 0.5) * (0.95 - j * 0.6));
+            ctx.fillStyle = k % 3 === 0 ? '#ffd25a' : k % 3 === 1 ? '#fffdf2' : '#ffe8a3';
+            ctx.beginPath(); ctx.arc(ox + w, y, 2 + j * 5, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+      }
+    } else if (g.kind === 'skis') {
+      // two skis under his feet (red, white stripe, tips curled up in front)
+      // and a pole in each hand trailing behind; snow sprays up off the tails
+      const fx = f.x / FX + dir * ((s.legF.c[0] + s.legB.c[0]) / 2 / FX), fy = f.y / FX + Math.max(s.legF.c[1], s.legB.c[1]) / FX + 2.5;
+      const bx = f.x / FX + dir * (s.armB.c[0] / FX), by = f.y / FX + s.armB.c[1] / FX;
+      ctx.strokeStyle = OUT; ctx.lineWidth = 1.6;
+      for (const [px0, py0] of [[bx, by], [hx, hy]]) { ctx.beginPath(); ctx.moveTo(px0, py0 - 1); ctx.lineTo(px0 - dir * 15, py0 + 13); ctx.stroke(); }
+      ctx.strokeStyle = '#c9ced8'; ctx.lineWidth = 0.8;
+      for (const [px0, py0] of [[bx, by], [hx, hy]]) {
+        ctx.beginPath(); ctx.moveTo(px0, py0 - 1); ctx.lineTo(px0 - dir * 15, py0 + 13); ctx.stroke();
+        ctx.fillStyle = OUT; ctx.beginPath(); ctx.arc(px0 - dir * 13.5, py0 + 11.6, 1.4, 0, Math.PI * 2); ctx.fill();   // basket
+      }
+      ctx.save(); ctx.translate(fx, fy); ctx.scale(dir, 1);
+      for (const off of [-1.2, 0.6]) {
+        ctx.fillStyle = OUT; ctx.beginPath(); ctx.moveTo(-16, off - 1.4); ctx.lineTo(13, off - 1.4); ctx.quadraticCurveTo(17, off - 1.6, 18.5, off - 5); ctx.lineTo(16.5, off - 5); ctx.quadraticCurveTo(15.5, off + 0.6, 13, off + 1); ctx.lineTo(-16, off + 1); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#d2343c'; ctx.fillRect(-15.4, off - 0.8, 28.4, 1.2);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(-6, off - 0.8, 10, 0.5);
+      }
+      ctx.restore();
+      if (act >= 0 && f.grounded) {
+        for (let k = 0; k < 12; k++) {
+          const j = ((k * 41 + 7) % 13) / 13, t = ((fr * 3 + k * 5) % 14) / 14;
+          ctx.globalAlpha = Math.max(0, 1 - t) * 0.9; ctx.fillStyle = k & 1 ? '#ffffff' : '#dfe8f5';
+          ctx.beginPath(); ctx.arc(fx - dir * (14 + t * (10 + j * 14)), fy - 1 - t * (6 + j * 10) + t * t * 8, 1 + j * 1.6, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+    } else if (g.kind === 'beerBottle') held(() => {
+      // a long-neck beer bottle gripped by the neck: brown glass, gold label
+      poly([[-1.1, -2], [1.1, -2], [1.3, 5], [3.2, 8], [3.2, 18], [-3.2, 18], [-3.2, 8], [-1.3, 5]], OUT);
+      poly([[-2.5, 8.5], [2.5, 8.5], [2.5, 17.3], [-2.5, 17.3]], '#6b3a12');
+      poly([[-2.5, 8.5], [-1.3, 8.5], [-1.3, 17.3], [-2.5, 17.3]], '#a8642a');
+      poly([[-0.6, -1.4], [0.6, -1.4], [0.8, 5.4], [-0.8, 5.4]], '#6b3a12');
+      ctx.fillStyle = '#e0b84a'; ctx.fillRect(-2.5, 11, 5, 3.6);
+      ctx.fillStyle = '#c8322b'; ctx.fillRect(-1.4, 12.2, 2.8, 1.2);
+      ctx.fillStyle = '#c9ced8'; ctx.fillRect(-1, -2.6, 2, 1.2);
+    });
+    else if (g.kind === 'pint') {
+      // a pint of lager with a foamy head; slops over when thrust up
+      held(() => {
+        poly([[-2.6, -0.6], [2.6, -0.6], [3.3, 10.6], [-3.3, 10.6]], OUT);
+        poly([[-2, 0], [2, 0], [2.6, 8], [-2.6, 8]], '#e8a032');
+        poly([[-2, 0], [-1, 0], [-1.3, 8], [-2.6, 8]], '#ffcf6a');
+        poly([[-2.6, 8], [2.6, 8], [2.7, 10], [-2.7, 10]], '#fffdf2');
+      });
+      if (act >= 0) {
+        const a = (s.armF.low * Math.PI) / 180, ox = hx + dir * Math.sin(a) * 10, oy = hy + Math.cos(a) * 10;
+        for (let k = 0; k < 22; k++) {
+          const j = ((k * 37 + 5) % 19) / 19, side = k & 1 ? 1 : -1, d = act * (8 + j * 22);
+          ctx.globalAlpha = Math.max(0, 1 - act) * 0.95;
+          ctx.fillStyle = k % 3 === 0 ? '#e8a032' : k % 3 === 1 ? '#fffdf2' : '#ffd25a';
+          ctx.beginPath(); ctx.arc(ox + side * d * (0.25 + j * 0.5), oy - d * (1.1 - j * 0.4) + act * act * 22 * j, 1 + j * 1.5, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+    } else if (g.kind === 'spill') {
+      // a can in hand and a slosh of lager rolling out low on both sides
+      held(() => {
+        ctx.fillStyle = OUT; ctx.fillRect(-2.4, -0.6, 4.8, 8.4);
+        ctx.fillStyle = '#c9ced8'; ctx.fillRect(-1.8, 0, 3.6, 7.2);
+        ctx.fillStyle = '#2f5fb8'; ctx.fillRect(-1.8, 1.4, 3.6, 4.4);
+      });
+      if (act >= 0) {
+        const fy = f.y / FX;
+        for (const side of [-1, 1]) {
+          for (let k = 0; k < 9; k++) {
+            const j = ((k * 37 + 11) % 10) / 10, x = f.x / FX + side * (6 + act * 22 + j * 12), h = (1 - act) * (5 + j * 9);
+            ctx.globalAlpha = Math.max(0, 1 - act * 0.9);
+            ctx.fillStyle = k % 3 === 0 ? '#fffdf2' : k % 3 === 1 ? '#ffd25a' : '#e8a032';
+            ctx.beginPath(); ctx.ellipse(x, fy - h * 0.5, 2 + j * 2, h * 0.5 + 1, 0, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.globalAlpha = Math.max(0, 1 - act) * 0.8; ctx.fillStyle = '#e8a032';
+          ctx.fillRect(Math.min(f.x / FX, f.x / FX + side * (8 + act * 34)), fy - 1, 8 + act * 26, 1.6);   // the puddle
+        }
+        ctx.globalAlpha = 1;
+      }
     }
   }
 
@@ -1329,6 +1454,33 @@ export class Renderer {
       ctx.fillStyle = '#100d16'; ctx.fillRect(x - 1, y - d.r - 2.2, 2, 2);          // the cap
       ctx.strokeStyle = '#c9b48a'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(x, y - d.r - 2); ctx.quadraticCurveTo(x + 2, y - d.r - 4, x + 2.5, y - d.r - 5); ctx.stroke();
       ctx.fillStyle = (p.life >> 1) & 1 ? '#ffd23f' : '#ff7a1c'; ctx.fillRect(x + 1.8, y - d.r - 6, 1.6, 1.6);   // spark
+      return;
+    }
+    if (d.draw === 'keg') {
+      if (p.boom) {
+        // it bursts: a wave of foam and lager that swells, then falls away
+        const k = 1 - p.boom / d.explode.frames, R = d.explode.r * (0.5 + 0.5 * Math.min(1, k * 2.5));
+        ctx.save();
+        for (let i = 0; i < 16; i++) {
+          const a = i * 0.785 + (i & 1) * 0.4, rr = R * (0.55 + ((i * 7) % 5) * 0.1);
+          ctx.globalAlpha = Math.max(0, 1 - k) * 0.9; ctx.fillStyle = i % 3 === 0 ? '#e8a032' : i % 3 === 1 ? '#fffdf2' : '#ffd25a';
+          ctx.beginPath(); ctx.arc(x + Math.cos(a) * rr, y + Math.sin(a) * rr * 0.7 + k * k * 10, 2.4 + (1 - k) * 3, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = Math.max(0, 1 - k * 1.2); ctx.fillStyle = '#fffdf2';
+        ctx.beginPath(); ctx.arc(x, y, R * 0.55 * (1 - k * 0.6), 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffd25a'; ctx.beginPath(); ctx.arc(x, y, R * 0.3 * (1 - k * 0.6), 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        return;
+      }
+      // a steel party keg with dark bands and a tap on top; rattles near the end
+      const late = p.life < 36 && (p.life >> 2) & 1, w = d.r + 0.4, h = d.r + 1.6, jig = late ? ((p.life >> 1) & 1 ? 0.6 : -0.6) : 0;
+      ctx.save(); ctx.translate(x + jig, y); ctx.rotate(p.rolling ? (p.spin / 2048) * Math.PI : 0);
+      ctx.fillStyle = '#100d16'; ctx.fillRect(-w - 0.8, -h - 0.8, (w + 0.8) * 2, (h + 0.8) * 2);
+      ctx.fillStyle = late ? '#e8a032' : '#b9c0cc'; ctx.fillRect(-w, -h, w * 2, h * 2);
+      ctx.fillStyle = '#e4e8ef'; ctx.fillRect(-w, -h, 1.6, h * 2);
+      ctx.fillStyle = '#6b7280'; ctx.fillRect(-w, -h + 1.2, w * 2, 1); ctx.fillRect(-w, h - 2.2, w * 2, 1); ctx.fillRect(-w, -0.5, w * 2, 1);
+      ctx.fillStyle = '#100d16'; ctx.fillRect(-1.4, -h - 2.6, 2.8, 2); ctx.fillRect(1, -h - 2.6, 2.6, 1);   // the tap
+      ctx.restore();
       return;
     }
     if (d.draw === 'vape') {
