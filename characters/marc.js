@@ -7,7 +7,7 @@
 // specials are his own.
 import { px } from '../engine/fixed.js';
 import { anim } from '../engine/skeleton.js';
-import { SIMEON } from './simeon.js';
+import { BASE as SIMEON } from './base.js';   // the shared 2D template (Simeon's original data)
 import { ZEID } from './zeid.js';
 import { MAX } from './max.js';
 

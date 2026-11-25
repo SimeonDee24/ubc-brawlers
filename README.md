@@ -62,6 +62,24 @@ No Node? Edit the version by hand in **both** `config/version.js` and
 - `net/handshake.js` already contains the version handshake the future online
   mode must use before starting a match.
 
+## Simeon's 3D model
+
+Simeon is drawn as a real 3D model (`assets/models/simeon.glb`) by a small
+WebGL2 renderer, `render/model3d.js`, and copied into the 2D canvas, so he
+layers with effects and the HUD like everyone else. Everyone else is still
+pixel art, built on the shared 2D template in `characters/base.js`.
+
+- Gameplay never touches the model: his animations are also baked to integer
+  2D poses (`characters/simeon-anims.js`, generated) that drive hitboxes and
+  hurtboxes, so the simulation stays deterministic for online play.
+- The model, rig and every animation are built by the Python scripts in
+  `tools/blender/` (run inside Blender 5): `poselib.py`, the `anims_*.py`
+  files, then `export.py` (`build_all()` + `export_glb()`), which writes the
+  GLB and `baked2d.json`. Then:
+  `python3 tools/blender/bake-to-js.py baked2d.json > characters/simeon-anims.js`
+- `tools/model-sheet.html?clips=idle,run` shows a contact sheet of any clips.
+- Without WebGL2 he falls back to his 2D sprite, driven by the same poses.
+
 ## Online play
 
 Title screen, any key, then **Host an online room** or **Join an online room**.

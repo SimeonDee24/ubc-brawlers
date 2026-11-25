@@ -1,0 +1,32 @@
+<!doctype html>
+<html><body style="margin:0;background:#3a3f4a">
+<canvas id="c"></canvas>
+<script type="module">
+// Contact sheet of 3D animations: ?clips=idle,walk&cols=8&k=3 (dev tool, not loaded by the game)
+import { getModel } from '../render/model3d.js';
+const p = new URLSearchParams(location.search);
+const cols = +(p.get('cols') || 8), k = +(p.get('k') || 3), cw = 64, ch = 74;
+const m = getModel('../assets/models/simeon.glb?t=' + Date.now());
+(function wait() {
+  if (!m.ready && !m.failed) return requestAnimationFrame(wait);
+  const clips = (p.get('clips') || Object.keys(m.clips).join(',')).split(',').filter((c) => m.clips[c]);
+  const cv = document.getElementById('c');
+  cv.width = (cols * cw + 70) * k; cv.height = clips.length * ch * k;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#4c5260'; ctx.fillRect(0, 0, cv.width, cv.height);
+  clips.forEach((name, r) => {
+    const n = Math.round(m.clips[name].len * 60);
+    ctx.setTransform(k, 0, 0, k, 0, 0);
+    ctx.fillStyle = r & 1 ? '#565c6b' : '#4c5260'; ctx.fillRect(0, r * ch, cols * cw + 70, ch);
+    ctx.fillStyle = '#fff'; ctx.font = '7px sans-serif'; ctx.fillText(name + ' ' + n, 2, r * ch + 9);
+    for (let c = 0; c < cols; c++) {
+      const f = Math.round((c * n) / Math.max(1, cols - 1));
+      ctx.setTransform(k, 0, 0, k, 0, 0);
+      ctx.fillStyle = '#2b2f3a'; ctx.fillRect(70 + c * cw + 4, r * ch + 60, cw - 8, 1);
+      ctx.fillStyle = '#cfd5e2'; ctx.fillText(String(f), 70 + c * cw + 4, r * ch + 70);
+      m.draw(ctx, k, name, f, false, 70 + c * cw + 26, r * ch + 60, 1, { box: 'small' });
+    }
+  });
+  document.title = 'done';
+})();
+</script></body></html>

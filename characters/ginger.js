@@ -5,7 +5,7 @@
 // four specials are her own.
 import { px } from '../engine/fixed.js';
 import { anim } from '../engine/skeleton.js';
-import { SIMEON } from './simeon.js';
+import { BASE as SIMEON } from './base.js';   // the shared 2D template (Simeon's original data)
 
 const stats = {
   ...SIMEON.stats,

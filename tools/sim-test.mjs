@@ -783,9 +783,10 @@ for (const hold of [0, 30]) {
 {
   const { CHARACTERS } = await import('../characters/index.js');
   check('fourteen characters with two skins each', CHARACTERS.length === 14 && CHARACTERS.every((c) => c.palettes.length === 2), CHARACTERS.map((c) => c.name + ':' + c.palettes.length).join(' '));
-  const [sim, kae, luc] = CHARACTERS;
+  const [, kae, luc] = CHARACTERS;
+  const sim = (await import('../characters/base.js')).BASE;   // the shared 2D template the cast is built on
   const shared = ['jab1', 'ftilt', 'utilt', 'dtilt', 'dashAttack', 'nair', 'fair', 'bair', 'uair', 'dair', 'grab'];
-  check('Kaelyn shares all normals, grabs and throws with Simeon', shared.every((m) => kae.moves[m] === sim.moves[m]) && kae.throws === sim.throws);
+  check('Kaelyn shares all normals, grabs and throws with the 2D base', shared.every((m) => kae.moves[m] === sim.moves[m]) && kae.throws === sim.throws);
   check('Luca shares all normals, grabs and throws too, with his own four specials', shared.every((m) => luc.moves[m] === sim.moves[m]) && ['neutral', 'side', 'up', 'down'].every((k) => luc.specials[k] && luc.specials[k] !== sim.specials[k] && luc.specials[k] !== kae.specials[k]));
   check('Kaelyn has her own four specials', ['neutral', 'side', 'up', 'down'].every((k) => kae.specials[k] && kae.specials[k] !== sim.specials[k]));
 }
@@ -1093,7 +1094,7 @@ for (const hold of [0, 30]) {
 // Sara: her own smash attacks and specials
 {
   const { getCharacter } = await import('../characters/index.js');
-  const sara = getCharacter('sara'), sim = getCharacter('simeon');
+  const sara = getCharacter('sara'), sim = (await import('../characters/base.js')).BASE;
   const shared = ['jab1', 'ftilt', 'utilt', 'dtilt', 'nair', 'fair', 'bair', 'uair', 'dair', 'dashAttack'].filter((m) => sim.moves[m]);
   check('Sara shares the normals with Simeon and has her own smashes and specials', shared.length > 6 && shared.every((m) => sara.moves[m] === sim.moves[m])
     && ['fsmash', 'usmash', 'dsmash'].every((m) => sara.moves[m] !== sim.moves[m]) && ['neutral', 'side', 'up', 'down'].every((k) => sara.moves[sara.specials[k]] && sara.specials[k] !== sim.specials[k]));
@@ -1139,7 +1140,7 @@ for (const hold of [0, 30]) {
 // Malcolm: card tricks, calisthenics and a pool cue
 {
   const { getCharacter } = await import('../characters/index.js');
-  const mal = getCharacter('malcolm'), sim = getCharacter('simeon');
+  const mal = getCharacter('malcolm'), sim = (await import('../characters/base.js')).BASE;
   check('Malcolm shares the normals with Simeon and has his own smashes and specials', ['ftilt', 'nair', 'fair', 'bair', 'dashAttack'].every((m) => mal.moves[m] === sim.moves[m])
     && ['fsmash', 'usmash', 'dsmash'].every((m) => mal.moves[m] !== sim.moves[m]) && ['neutral', 'side', 'up', 'down'].every((k) => mal.moves[mal.specials[k]]));
   check('Malcolm: glasses in the first skin only', mal.palettes[0].colors.G !== mal.palettes[0].colors.k && mal.palettes[1].colors.G === mal.palettes[1].colors.k);
@@ -1168,7 +1169,7 @@ for (const hold of [0, 30]) {
 // Max: body slams, a champagne bottle and cash
 {
   const { getCharacter } = await import('../characters/index.js');
-  const mx = getCharacter('max'), sim = getCharacter('simeon');
+  const mx = getCharacter('max'), sim = (await import('../characters/base.js')).BASE;
   check('Max is a heavyweight about Simeon\'s height, with his own smashes and specials', mx.stats.weight > sim.stats.weight + 15 && Math.abs(mx.heightInches - sim.heightInches) <= 1
     && ['fsmash', 'usmash', 'dsmash'].every((m) => mx.moves[m] !== sim.moves[m]) && ['neutral', 'side', 'up', 'down'].every((k) => mx.moves[mx.specials[k]]));
   const mk = (dx = 26, dy = 0) => { const s = createMatch({ ...setup, players: [{ charId: 'max', alt: 0 }, { charId: 'simeon', alt: 1 }] }); const [a, v] = s.fighters; v.x = a.x + dx * FX; v.y += dy * FX; if (dy) { v.grounded = 0; v.ground = -1; } return s; };
@@ -1205,7 +1206,7 @@ for (const hold of [0, 30]) {
 // Osama: MMA
 {
   const { getCharacter } = await import('../characters/index.js');
-  const os = getCharacter('osama'), sim = getCharacter('simeon');
+  const os = getCharacter('osama'), sim = (await import('../characters/base.js')).BASE;
   check('Osama has his own smashes and specials, with glasses in the first skin only', ['fsmash', 'usmash', 'dsmash'].every((m) => os.moves[m] !== sim.moves[m]) && ['neutral', 'side', 'up', 'down'].every((k) => os.moves[os.specials[k]])
     && os.palettes[0].colors.G !== os.palettes[0].colors.k && os.palettes[1].colors.G === os.palettes[1].colors.k);
   const mk = (dx = 26, dy = 0) => { const s = createMatch({ ...setup, players: [{ charId: 'osama', alt: 0 }, { charId: 'simeon', alt: 1 }] }); const [a, v] = s.fighters; v.x = a.x + dx * FX; v.y += dy * FX; if (dy) { v.grounded = 0; v.ground = -1; } return s; };
@@ -1259,7 +1260,7 @@ for (const hold of [0, 30]) {
 // Zeid: vapes and cigarettes
 {
   const { getCharacter } = await import('../characters/index.js');
-  const z = getCharacter('zeid'), sim = getCharacter('simeon');
+  const z = getCharacter('zeid'), sim = (await import('../characters/base.js')).BASE;
   check('Zeid has his own smashes and specials', ['fsmash', 'usmash', 'dsmash'].every((m) => z.moves[m] !== sim.moves[m]) && ['neutral', 'side', 'up', 'down'].every((k) => z.moves[z.specials[k]]));
   const mk = (dx = 26, dy = 0) => { const s = createMatch({ ...setup, players: [{ charId: 'zeid', alt: 0 }, { charId: 'simeon', alt: 1 }] }); const [a, v] = s.fighters; v.x = a.x + dx * FX; v.y += dy * FX; if (dy) { v.grounded = 0; v.ground = -1; } return s; };
   const run = (s, first, n = 80) => { step(s, [first, 0]); for (let i = 0; i < n; i++) step(s, [0, 0]); return s.fighters[1].percent / 10; };
@@ -1311,7 +1312,7 @@ for (const hold of [0, 30]) {
 // Sam: melee, plus a powder stream
 {
   const { getCharacter } = await import('../characters/index.js');
-  const sm = getCharacter('sam'), sim = getCharacter('simeon');
+  const sm = getCharacter('sam'), sim = (await import('../characters/base.js')).BASE;
   const projMoves = Object.entries(sm.moves).filter(([n, m]) => (m.spawn || m.stream || m.spawns) && sm.moves[n] !== sim.moves[n]).map(([n]) => n);
   check('Sam has his own smashes and specials, and the powder is his only projectile', ['fsmash', 'usmash', 'dsmash'].every((m) => sm.moves[m] !== sim.moves[m]) && ['neutral', 'side', 'up', 'down'].every((k) => sm.moves[sm.specials[k]])
     && projMoves.join() === 'powderBlast', projMoves.join());
@@ -1365,7 +1366,7 @@ for (const hold of [0, 30]) {
 // Matt: volleyball, frisbee, League, Roblox
 {
   const { getCharacter } = await import('../characters/index.js');
-  const mt = getCharacter('matt'), sim = getCharacter('simeon');
+  const mt = getCharacter('matt'), sim = (await import('../characters/base.js')).BASE;
   check('Matt has his own smashes and specials', ['fsmash', 'usmash', 'dsmash'].every((m) => mt.moves[m] !== sim.moves[m]) && ['neutral', 'side', 'up', 'down'].every((k) => mt.moves[mt.specials[k]] && mt.animations[mt.specials[k]]));
   const mk = (dx = 26, dy = 0) => { const s = createMatch({ ...setup, players: [{ charId: 'matt', alt: 0 }, { charId: 'simeon', alt: 1 }] }); const [a, v] = s.fighters; v.x = a.x + dx * FX; v.y += dy * FX; if (dy) { v.grounded = 0; v.ground = -1; } return s; };
   const run = (s, first, n = 80) => { step(s, [first, 0]); for (let i = 0; i < n; i++) step(s, [0, 0]); return s.fighters[1].percent / 10; };
@@ -1446,7 +1447,7 @@ for (const hold of [0, 30]) {
 // Ginger: ice cream, surfing, taekwondo, Muay Thai, guitar, snowboarding
 {
   const { getCharacter } = await import('../characters/index.js');
-  const g = getCharacter('ginger'), sim = getCharacter('simeon');
+  const g = getCharacter('ginger'), sim = (await import('../characters/base.js')).BASE;
   check('Ginger has her own smashes and specials', ['fsmash', 'usmash', 'dsmash'].every((m) => g.moves[m] !== sim.moves[m]) && ['neutral', 'side', 'up', 'down'].every((k) => g.moves[g.specials[k]] && g.animations[g.specials[k]]));
   const mk = (dx = 26, dy = 0) => { const s = createMatch({ ...setup, players: [{ charId: 'ginger', alt: 0 }, { charId: 'simeon', alt: 1 }] }); const [a, v] = s.fighters; v.x = a.x + dx * FX; v.y += dy * FX; if (dy) { v.grounded = 0; v.ground = -1; } return s; };
   const run = (s, first, n = 80) => { step(s, [first, 0]); for (let i = 0; i < n; i++) step(s, [0, 0]); return s.fighters[1].percent / 10; };
@@ -1469,7 +1470,7 @@ for (const hold of [0, 30]) {
 // Faybua: cookies, a tactical dash, skateboarding, fashion, dancing, horses
 {
   const { getCharacter } = await import('../characters/index.js');
-  const fb = getCharacter('faybua'), sim = getCharacter('simeon');
+  const fb = getCharacter('faybua'), sim = (await import('../characters/base.js')).BASE;
   check('Faybua has her own smashes and specials', ['fsmash', 'usmash', 'dsmash'].every((m) => fb.moves[m] !== sim.moves[m]) && ['neutral', 'side', 'up', 'down'].every((k) => fb.moves[fb.specials[k]] && fb.animations[fb.specials[k]]));
   const mk = (dx = 26, dy = 0) => { const s = createMatch({ ...setup, players: [{ charId: 'faybua', alt: 0 }, { charId: 'simeon', alt: 1 }] }); const [a, v] = s.fighters; v.x = a.x + dx * FX; v.y += dy * FX; if (dy) { v.grounded = 0; v.ground = -1; } return s; };
   const run = (s, first, n = 80) => { step(s, [first, 0]); for (let i = 0; i < n; i++) step(s, [0, 0]); return s.fighters[1].percent / 10; };
@@ -1491,7 +1492,7 @@ for (const hold of [0, 30]) {
 // Marc: a ski run and a lot of drinks
 {
   const { getCharacter } = await import('../characters/index.js');
-  const mc = getCharacter('marc'), sim = getCharacter('simeon');
+  const mc = getCharacter('marc'), sim = (await import('../characters/base.js')).BASE;
   check('Marc has his own smashes and specials', ['fsmash', 'usmash', 'dsmash'].every((m) => mc.moves[m] !== sim.moves[m]) && ['neutral', 'side', 'up', 'down'].every((k) => mc.moves[mc.specials[k]] && mc.animations[mc.specials[k]]));
   const mk = (dx = 26, dy = 0) => { const s = createMatch({ ...setup, players: [{ charId: 'marc', alt: 0 }, { charId: 'simeon', alt: 1 }] }); const [a, v] = s.fighters; v.x = a.x + dx * FX; v.y += dy * FX; if (dy) { v.grounded = 0; v.ground = -1; } return s; };
   const run = (s, first, n = 80) => { step(s, [first, 0]); for (let i = 0; i < n; i++) step(s, [0, 0]); return s.fighters[1].percent / 10; };
@@ -1525,7 +1526,7 @@ for (const hold of [0, 30]) {
 // Kieran: photography, cars, pizza and dookie
 {
   const { getCharacter } = await import('../characters/index.js');
-  const kr = getCharacter('kieran'), sim = getCharacter('simeon');
+  const kr = getCharacter('kieran'), sim = (await import('../characters/base.js')).BASE;
   check('Kieran has his own smashes and specials', ['fsmash', 'usmash', 'dsmash'].every((m) => kr.moves[m] !== sim.moves[m]) && ['neutral', 'side', 'up', 'down'].every((k) => kr.moves[kr.specials[k]] && kr.animations[kr.specials[k]]));
   const mk = (dx = 26, dy = 0) => { const s = createMatch({ ...setup, players: [{ charId: 'kieran', alt: 0 }, { charId: 'simeon', alt: 1 }] }); const [a, v] = s.fighters; v.x = a.x + dx * FX; v.y += dy * FX; if (dy) { v.grounded = 0; v.ground = -1; } return s; };
   const run = (s, first, n = 80) => { step(s, [first, 0]); for (let i = 0; i < n; i++) step(s, [0, 0]); return s.fighters[1].percent / 10; };

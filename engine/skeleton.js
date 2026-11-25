@@ -53,7 +53,32 @@ export function anim(loop, keys, opts = {}) {
   return { loop, keys: k, total, ease: opts.ease !== undefined ? opts.ease : !loop };
 }
 
+// A baked animation: one ready-made pose per frame (exported from a 3D
+// animation, see characters/simeon-anims.js). rows[i] = [hx, hy, torso, head,
+// afu, afl, abu, abl, lfu, lfl, lbu, lbl, ff, fb, handF, handB, face, wF, wM]
+// with hx/hy and the weapon points already in fixed-point. Weapon points
+// (wF/wM: [x, y] or 0) let hitboxes sit exactly on a held prop.
+const HANDS = ['open', 'fist'];
+export function bakedAnim(loop, rows, faces) {
+  const poses = rows.map((r) => ({
+    rot: 0, hx: r[0], hy: r[1], torso: r[2], head: r[3], afu: r[4], afl: r[5], abu: r[6], abl: r[7],
+    lfu: r[8], lfl: r[9], lbu: r[10], lbl: r[11], ff: r[12], fb: r[13],
+    handF: HANDS[r[14]], handB: HANDS[r[15]], face: faces[r[16]], wF: r[17] || null, wM: r[18] || null,
+  }));
+  // (keys keep older code that reads keys[0].pose working)
+  return { loop, baked: poses, keys: [{ d: 1, pose: poses[0] }], total: loop ? poses.length - 1 : poses.length - 1, ease: false };
+}
+
 export function samplePose(a, frame) {
+  if (a.baked) {
+    const n = a.baked.length;
+    const at = (i) => (a.loop ? a.baked[n > 1 ? i % (n - 1) : 0] : a.baked[i < n ? i : n - 1]);
+    if (Number.isInteger(frame)) return at(frame);
+    // between two frames (only the renderer asks for these, e.g. swipe trails)
+    const i = Math.floor(frame), t = frame - i, A = at(i), B = at(i + 1), out = { ...A };
+    for (const key of POSE_KEYS) out[key] = A[key] + (B[key] - A[key]) * t;
+    return out;
+  }
   const keys = a.keys;
   const n = keys.length;
   if (n === 1 || a.total <= 0) return keys[0].pose;
@@ -119,6 +144,7 @@ export function solve(skel, p) {
     legB: limb(hipX - hox, hipY - hoy, skel.upperLeg, skel.lowerLeg, p.lbu - r, p.lbl),
     footF: p.ff - r, footB: p.fb - r,
     handF: p.handF, handB: p.handB, face: p.face,
+    wF: p.wF || null, wM: p.wM || null,
   };
 }
 

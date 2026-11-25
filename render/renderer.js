@@ -11,6 +11,7 @@ import { getCharacter, CHARACTERS } from '../characters/index.js';
 import { getStage } from '../stages/index.js';
 import { tossLift } from '../engine/projectiles.js';
 import { DollRenderer } from './doll.js';
+import { getModel } from './model3d.js';
 import { Background } from './background.js';
 import { drawLabel as drawText, labelWidth, labelFont } from './font.js';
 
@@ -75,6 +76,27 @@ export class Renderer {
     this.players = [];      // per fighter in the match: { port, label } (which colour and tag they get)
     this.resize();
     window.addEventListener('resize', () => this.resize());
+  }
+
+  // A fighter's 3D model, once it has loaded (null for the pixel-art cast,
+  // while it loads, or when WebGL2 isn't available).
+  model3d(ch) {
+    if (!ch.model3d) return null;
+    const m = getModel(ch.model3d.url + '?v=' + encodeURIComponent(GAME_VERSION));
+    return m.ready ? m : null;
+  }
+
+  // Draw a fighter's body: the 3D model when there is one, else the paper doll.
+  body(ctx, ch, alt, anim, frame, x, y, facing, opts = {}) {
+    const m = this.model3d(ch);
+    if (m) {
+      const a = ch.animations[anim] || ch.animations.idle;
+      const clip = m.clips[anim] ? anim : 'idle';
+      const t = ctx.getTransform(), k = Math.hypot(t.a, t.b);
+      const colors = (ch.model3d.palettes && ch.model3d.palettes[alt]) || {};
+      if (m.draw(ctx, k, clip, frame, !!a.loop, x, y, facing, { colors, flash: opts.flash, alpha: opts.alpha })) return;
+    }
+    this.doll.drawAnim(ctx, ch, alt, anim, frame, x, y, facing, opts);
   }
 
   // Who is in the match: players[i] = { port: 0-3, label: 'P1' | 'CPU' }.
@@ -237,12 +259,12 @@ export class Renderer {
       // directional air dodge: fading afterimages trailing behind him
       if (f.state === 'airdodge' && f.dodgeDir && (f.vx || f.vy)) {
         for (const [k, alpha] of [[6, 0.18], [3, 0.32]]) {
-          this.doll.drawAnim(ctx, ch, f.alt, f.anim, f.animFrame, (f.x - f.vx * k) / FX, (f.y - f.vy * k) / FX, f.facing,
+          this.body(ctx, ch, f.alt, f.anim, f.animFrame, (f.x - f.vx * k) / FX, (f.y - f.vy * k) / FX, f.facing,
             { flash: '#bfeaff', alpha });
         }
       }
       const jb = f.state === 'knockdown' && state.tick - f.jabBounce >= 0 && state.tick - f.jabBounce < 6 ? [0, 2, 3, 3, 2, 1][state.tick - f.jabBounce] : 0;   // a jab lock bounces them on the floor
-      this.doll.drawAnim(ctx, ch, f.alt, f.anim, f.animFrame, f.x / FX + shake, f.y / FX - jb, f.facing,
+      this.body(ctx, ch, f.alt, f.anim, f.animFrame, f.x / FX + shake, f.y / FX - jb, f.facing,
         { flash: tint || undefined, swap: cm && cm.wear,
           // twirl: [from, to] frames during which he spins on the spot
           squash: cm && cm.twirl && cm.twirl.some(([a, b]) => f.stateFrame >= a && f.stateFrame <= b) ? Math.cos(f.stateFrame * 0.85) : undefined });
@@ -280,6 +302,8 @@ export class Renderer {
     const mv = f.state === 'attack' && f.move ? ch.moves[f.move] : null;
     const g = mv && mv.gear;
     if (!g || f.stateFrame < g.from || f.stateFrame > g.to) return;
+    const m3 = this.model3d(ch);   // a 3D model holds its own props; only effects are drawn here
+    if (m3 && g.kind !== 'chips') return;
     const ctx = this.ctx, fr = f.stateFrame, dir = f.facing;
     const s = solve(ch.skeleton, samplePose(ch.animations[f.anim] || ch.animations.idle, f.animFrame));
     const hx = f.x / FX + dir * (s.armF.c[0] / FX), hy = f.y / FX + s.armF.c[1] / FX;   // front hand
@@ -450,7 +474,7 @@ export class Renderer {
       });
     } else if (g.kind === 'chips') {
       const chip = (x, y, k) => { ctx.fillStyle = OUT; ctx.fillRect(x - 3, y - 1.3, 6, 2.6); ctx.fillStyle = ['#d2343c', '#f6f6f2', '#2f7bff', '#2fa35a'][k & 3]; ctx.fillRect(x - 2.5, y - 0.8, 5, 1.6); ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 0.6, y - 0.8, 1.2, 1.6); };
-      if (act < 0 && fr < g.active[0]) { for (let k = 0; k < 6; k++) chip(hx + dir * 2, hy - 2 - k * 1.8, k); }
+      if (act < 0 && fr < g.active[0]) { if (!m3) for (let k = 0; k < 6; k++) chip(hx + dir * 2, hy - 2 - k * 1.8, k); }
       else if (act >= 0) {
         // burst along the floor on both sides, hopping as they scatter
         const fy = f.y / FX;
@@ -1209,7 +1233,7 @@ export class Renderer {
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, R - 0.5, 0, Math.PI * 2); ctx.clip();
     ctx.translate(cx, cy + 11); ctx.scale(0.5, 0.5);
-    this.doll.drawAnim(ctx, getCharacter(f.charId), f.alt, f.anim, f.animFrame, 0, 0, f.facing);
+    this.body(ctx, getCharacter(f.charId), f.alt, f.anim, f.animFrame, 0, 0, f.facing);
     ctx.restore();
     ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
     ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.arc(cx, cy, R - 1.6, Math.PI * 1.05, Math.PI * 1.6); ctx.stroke();
@@ -1757,7 +1781,7 @@ export class Renderer {
   drawHeldBall(f, ch, camX, camY) {
     if (f.state !== 'attack' || !f.move) return;
     const mv = ch.moves[f.move];
-    if (!mv.holdBall || f.stateFrame < mv.holdBall[0] || f.stateFrame > mv.holdBall[1]) return;
+    if (!mv.holdBall || f.stateFrame < mv.holdBall[0] || f.stateFrame > mv.holdBall[1] || this.model3d(ch)) return;
     const s = solve(ch.skeleton, samplePose(ch.animations[f.anim] || ch.animations.idle, f.animFrame));
     const a = jointAt(s, 'fistF'), b = jointAt(s, 'fistB');
     const x = (f.x + f.facing * ((a[0] + b[0]) >> 1)) / FX + f.facing * 2;
@@ -1805,7 +1829,7 @@ export class Renderer {
   drawCard(state, f, ch, camX, camY) {
     if (f.state !== 'attack' || !f.move) return;
     const cd = ch.moves[f.move].card;
-    if (!cd || f.stateFrame < cd.from || f.stateFrame > cd.to) return;
+    if (!cd || f.stateFrame < cd.from || f.stateFrame > cd.to || this.model3d(ch)) return;
     const a = ch.animations[f.anim] || ch.animations.idle;
     const hand = jointAt(solve(ch.skeleton, samplePose(a, f.animFrame)), 'fistF');
     const big = cd.size === 'big';
@@ -2131,7 +2155,7 @@ export class Renderer {
       ctx.save();
       ctx.beginPath(); ctx.rect(r.x, r.y, r.w, r.h); ctx.clip();
       ctx.translate(cx, r.y + 86); ctx.scale(1.6, 1.6);
-      if (ch) this.doll.drawAnim(ctx, ch, sl.alt, 'idle', t + i * 17, 0, 0, i & 1 ? -1 : 1);
+      if (ch) this.body(ctx, ch, sl.alt, 'idle', t + i * 17, 0, 0, i & 1 ? -1 : 1);
       ctx.restore();
       if (!ch) drawText(ctx, '?', cx, r.y + 28, '#ffe14a', 6, 'center', '#000000');
       // header: who plays this slot
@@ -2333,7 +2357,7 @@ export class Renderer {
     const m = stage.solids[0], n = CHARACTERS.length, gap = Math.min(52, (m.w - 40) / Math.max(1, n - 1));
     CHARACTERS.forEach((ch, i) => {
       const x = W / 2 + (i - (n - 1) / 2) * gap;
-      this.doll.drawAnim(ctx, ch, 0, 'idle', this.time + i * 23, x, m.y, x < W / 2 ? 1 : -1);
+      this.body(ctx, ch, 0, 'idle', this.time + i * 23, x, m.y, x < W / 2 ? 1 : -1);
     });
 
     const title = CONFIG.GAME_TITLE;
