@@ -879,15 +879,13 @@ export class Renderer {
         }
         ctx.globalAlpha = 1;
       }
-    } else if (g.kind === 'beerBottle') held(() => {
-      // a long-neck beer bottle gripped by the neck: brown glass, gold label
-      poly([[-1.1, -2], [1.1, -2], [1.3, 5], [3.2, 8], [3.2, 18], [-3.2, 18], [-3.2, 8], [-1.3, 5]], OUT);
-      poly([[-2.5, 8.5], [2.5, 8.5], [2.5, 17.3], [-2.5, 17.3]], '#6b3a12');
-      poly([[-2.5, 8.5], [-1.3, 8.5], [-1.3, 17.3], [-2.5, 17.3]], '#a8642a');
-      poly([[-0.6, -1.4], [0.6, -1.4], [0.8, 5.4], [-0.8, 5.4]], '#6b3a12');
-      ctx.fillStyle = '#e0b84a'; ctx.fillRect(-2.5, 11, 5, 3.6);
-      ctx.fillStyle = '#c8322b'; ctx.fillRect(-1.4, 12.2, 2.8, 1.2);
-      ctx.fillStyle = '#c9ced8'; ctx.fillRect(-1, -2.6, 2, 1.2);
+    } else if (g.kind === 'kegSwing') held(() => {
+      // a steel keg gripped by its top rim, swung by the handle: dark bands, a tap
+      ctx.fillStyle = OUT; ctx.fillRect(-6.6, 1, 13.2, 17.4);
+      ctx.fillStyle = '#b9c0cc'; ctx.fillRect(-5.8, 1.8, 11.6, 15.8);
+      ctx.fillStyle = '#e4e8ef'; ctx.fillRect(-5.8, 1.8, 2.2, 15.8);
+      ctx.fillStyle = '#6b7280'; ctx.fillRect(-5.8, 3.6, 11.6, 1.2); ctx.fillRect(-5.8, 9.2, 11.6, 1.2); ctx.fillRect(-5.8, 14.8, 11.6, 1.2);
+      ctx.fillStyle = OUT; ctx.fillRect(-1.6, -0.8, 3.2, 2.2); ctx.fillRect(1.2, -0.4, 3, 1.2);
     });
     else if (g.kind === 'pint') {
       // a pint of lager with a foamy head; slops over when thrust up

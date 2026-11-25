@@ -1497,7 +1497,7 @@ for (const hold of [0, 30]) {
   const run = (s, first, n = 80) => { step(s, [first, 0]); for (let i = 0; i < n; i++) step(s, [0, 0]); return s.fighters[1].percent / 10; };
   TEST_CONFIG.SMASH_FLICK_FRAMES = FLICK;
   const f = run(mk(26), BTN.SMASH), u = run(mk(3, -40), BTN.SMASH | BTN.UP), d1 = run(mk(-18), BTN.SMASH | BTN.DOWN), d2 = run(mk(18), BTN.SMASH | BTN.DOWN);
-  check('Bottle Smash 17%, Cheers 15%, Spill 14% behind and in front', f === 17 && u === 15 && d1 === 14 && d2 === 14, `${f}% / ${u}% / ${d1}% / ${d2}%`);
+  check('Keg Smash 18%, Cheers 15%, Spill 14% behind and in front', f === 18 && u === 15 && d1 === 14 && d2 === 14, `${f}% / ${u}% / ${d1}% / ${d2}%`);
   TEST_CONFIG.SMASH_FLICK_FRAMES = 0;
   const burp = run(mk(14), BTN.SPECIAL, 60), ski = run(mk(70), BTN.SPECIAL | BTN.RIGHT, 60);
   const sd = mk(400); const sa = sd.fighters[0], x0 = sa.x; step(sd, [BTN.SPECIAL | BTN.RIGHT, 0]); for (let i = 0; i < 60; i++) step(sd, [0, 0]);

@@ -1,7 +1,7 @@
 // MARC SOLOMOSI — a ski bum who never misses a party. His side special is a
 // straight-line ski run and his down special is Zeid's bomb; the rest are
 // drinks: a shotgunned beer (hold it all the way and he blows himself up,
-// like Hero's Kamikaze), a shaken can he rides up, a bottle, a pint.
+// like Hero's Kamikaze), a shaken can he rides up, a keg, a pint.
 // He shares every normal attack, grab and throw with Simeon (same skeleton,
 // same animations); his look, a few stats, his smash attacks and his four
 // specials are his own.
@@ -137,7 +137,7 @@ const animations = {
   bomb: ZEID.animations.bomb,
   itemToss: ZEID.animations.itemToss,
   // --- Smash attacks ---
-  // Bottle Smash: a beer bottle raised behind him and slammed down in front (Max's swing).
+  // Keg Smash: a keg heaved up behind him and slammed down in front (Max's swing).
   fsmash: MAX.animations.fsmash,
   // Cheers: dips with a pint, then thrusts it straight up and it slops over.
   usmash: anim(false, [
@@ -207,10 +207,10 @@ const moves = {
   itemToss: ZEID.moves.itemToss,
 
   // --- Smash attacks (see simeon.js for how they are performed) ---
-  // Forward: Bottle Smash. A beer bottle slammed down in front: 17%.
-  fsmash: { faf: 54, charge: { at: 14, max: 60, smash: true }, gear: { kind: 'beerBottle', from: 0, to: 46, active: [20, 30] },
-    trail: { part: 'weaponF', from: 18, to: 23, width: 9, arc: true }, hitboxes: [
-      ...hits(19, 22, [['weaponF', 9], ['weaponMidF', 7], ['fistF', 6]], 17, 361, 34, 97, { chargeScale: [170, 238], lagMult: 150 }),
+  // Forward: Keg Smash. A full keg slammed down in front: slow but heavy, 18%.
+  fsmash: { faf: 56, charge: { at: 14, max: 60, smash: true }, gear: { kind: 'kegSwing', from: 0, to: 46, active: [20, 30] },
+    trail: { part: 'weaponF', from: 18, to: 23, width: 12, arc: true }, hitboxes: [
+      ...hits(19, 22, [['weaponF', 11], ['weaponMidF', 8], ['fistF', 6]], 18, 361, 36, 98, { chargeScale: [180, 252], lagMult: 150 }),
     ] },
   // Up: Cheers. A pint thrust straight up, slopping over: 15% at the glass,
   // a weaker 10% in the splash above it (one or the other).
