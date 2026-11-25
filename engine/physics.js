@@ -137,20 +137,23 @@ const NO_PHYSICS = { techWall: 1, ledge: 1, ledgeGetup: 1, ledgeRoll: 1, dead: 1
 export function checkBlastZones(f, stage) {
   if (f.state === 'dead' || f.state === 'out' || f.state === 'respawn') return;
   const b = stage.blast;
-  if (f.x < b.left * FX || f.x > b.right * FX || f.y < b.top * FX || f.y > b.bottom * FX) {
-    f.falls++;
-    f.stocks--;
-    f.percent = 0; // damage resets with every stock
-    f.koX = Math.max(0, Math.min(CONFIG.SCREEN_W, f.x >> 8));
-    f.koY = Math.max(0, Math.min(CONFIG.SCREEN_H, f.y >> 8));
-    f.vx = 0; f.vy = 0;
-    f.fastFall = 0;
-    f.grounded = 0; f.ground = -1;
-    f.ledge = -1; f.ledgeCd = 0;
-    f.tumbling = 0; f.intangible = 0; f.airDodged = 0;
-    f.shieldHp = CONFIG.SHIELD_MAX; f.mash = 0;
-    setState(f, 'dead', 'fall');
-  }
+  if (f.x < b.left * FX || f.x > b.right * FX || f.y < b.top * FX || f.y > b.bottom * FX) koFighter(f);
+}
+
+// Lose a stock right where he is (a blast zone, or blowing himself up).
+export function koFighter(f) {
+  f.falls++;
+  f.stocks--;
+  f.percent = 0; // damage resets with every stock
+  f.koX = Math.max(0, Math.min(CONFIG.SCREEN_W, f.x >> 8));
+  f.koY = Math.max(0, Math.min(CONFIG.SCREEN_H, f.y >> 8));
+  f.vx = 0; f.vy = 0;
+  f.fastFall = 0;
+  f.grounded = 0; f.ground = -1;
+  f.ledge = -1; f.ledgeCd = 0;
+  f.tumbling = 0; f.intangible = 0; f.airDodged = 0;
+  f.shieldHp = CONFIG.SHIELD_MAX; f.mash = 0;
+  setState(f, 'dead', 'fall');
 }
 
 // Fighters standing on the ground push each other instead of walking or

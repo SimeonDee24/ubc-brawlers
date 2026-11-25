@@ -795,6 +795,15 @@ export class Renderer {
       });
       const a = (s.armF.low * Math.PI) / 180, ox = hx + dir * Math.sin(a) * 8, oy = hy + Math.cos(a) * 8;
       if (g.kind === 'beercan') {
+        // the longer he chugs, the redder he glows: flashing near a full charge (Kamikaze)
+        const heat = mv.charge ? Math.min(1, f.charge / mv.charge.max) : 0;
+        if (heat > 0.15 && fr <= mv.charge.at + 1) {
+          const cx = f.x / FX + dir * (s.neck[0] / FX), cy = f.y / FX + s.neck[1] / FX + 8;
+          const pulse = 0.5 + 0.5 * Math.sin(state.tick * (0.2 + heat * 0.6));
+          ctx.globalAlpha = (heat - 0.15) * (0.35 + 0.35 * pulse); ctx.fillStyle = heat > 0.75 && (state.tick >> 2) & 1 ? '#ffffff' : '#ff5a2a';
+          ctx.beginPath(); ctx.arc(cx, cy - 4, 12 + heat * 10 + pulse * 3, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+        }
         if (fr < (g.active ? g.active[0] : 99)) can();
         if (fr >= 6 && fr < 16) {   // a dribble down his chin while he slams it
           ctx.fillStyle = '#ffd25a';
@@ -832,6 +841,16 @@ export class Renderer {
           }
           ctx.globalAlpha = 1;
         }
+      }
+    } else if (g.kind === 'kamikaze') {
+      // about to go off: a swelling, flashing glow and sparks pulled in toward him
+      const t = (fr - g.from) / (g.to - g.from), cx = f.x / FX, cy = f.y / FX - 22;
+      ctx.globalAlpha = 0.35 + t * 0.45; ctx.fillStyle = (state.tick >> 1) & 1 ? '#fff3b0' : '#ff5a1c';
+      ctx.beginPath(); ctx.arc(cx, cy, 14 + t * 18, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+      for (let k = 0; k < 12; k++) {
+        const a = k * 0.52 + fr * 0.1, d = 34 * (1 - ((fr * 2 + k * 5) % 20) / 20);
+        ctx.fillStyle = k & 1 ? '#ffd25a' : '#ffffff'; ctx.fillRect(cx + Math.cos(a) * d - 1, cy + Math.sin(a) * d - 1, 2, 2);
       }
     } else if (g.kind === 'skis') {
       // two skis under his feet (red, white stripe, tips curled up in front)
@@ -1456,30 +1475,22 @@ export class Renderer {
       ctx.fillStyle = (p.life >> 1) & 1 ? '#ffd23f' : '#ff7a1c'; ctx.fillRect(x + 1.8, y - d.r - 6, 1.6, 1.6);   // spark
       return;
     }
-    if (d.draw === 'keg') {
-      if (p.boom) {
-        // it bursts: a wave of foam and lager that swells, then falls away
-        const k = 1 - p.boom / d.explode.frames, R = d.explode.r * (0.5 + 0.5 * Math.min(1, k * 2.5));
-        ctx.save();
-        for (let i = 0; i < 16; i++) {
-          const a = i * 0.785 + (i & 1) * 0.4, rr = R * (0.55 + ((i * 7) % 5) * 0.1);
-          ctx.globalAlpha = Math.max(0, 1 - k) * 0.9; ctx.fillStyle = i % 3 === 0 ? '#e8a032' : i % 3 === 1 ? '#fffdf2' : '#ffd25a';
-          ctx.beginPath(); ctx.arc(x + Math.cos(a) * rr, y + Math.sin(a) * rr * 0.7 + k * k * 10, 2.4 + (1 - k) * 3, 0, Math.PI * 2); ctx.fill();
-        }
-        ctx.globalAlpha = Math.max(0, 1 - k * 1.2); ctx.fillStyle = '#fffdf2';
-        ctx.beginPath(); ctx.arc(x, y, R * 0.55 * (1 - k * 0.6), 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#ffd25a'; ctx.beginPath(); ctx.arc(x, y, R * 0.3 * (1 - k * 0.6), 0, Math.PI * 2); ctx.fill();
-        ctx.restore();
-        return;
+    if (d.draw === 'kamikaze') {
+      if (!p.boom) return;
+      // Kamikaze: a white flash, a huge fireball, beer foam flung everywhere, then smoke
+      const k = 1 - p.boom / d.explode.frames, R = d.explode.r * (0.45 + 0.55 * Math.min(1, k * 3));
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 1 - k * 0.8);
+      ctx.fillStyle = '#4a4550'; for (let i = 0; i < 9; i++) { const a = i * 0.7 + k; ctx.beginPath(); ctx.arc(x + Math.cos(a) * R * 0.7, y + Math.sin(a) * R * 0.55 - k * 12, R * 0.4, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = '#ff5a1c'; ctx.beginPath(); ctx.arc(x, y, R * (1 - k * 0.45), 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffb43a'; ctx.beginPath(); ctx.arc(x, y, R * 0.72 * (1 - k * 0.6), 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff3b0'; ctx.beginPath(); ctx.arc(x, y, R * 0.42 * (1 - k * 0.8), 0, Math.PI * 2); ctx.fill();
+      for (let i = 0; i < 18; i++) {
+        const a = i * 0.349 + (i & 1) * 0.2, dd = R * (0.6 + k * 0.9) * (0.8 + ((i * 7) % 5) * 0.08);
+        ctx.fillStyle = i % 3 ? '#fffdf2' : '#ffd25a';
+        ctx.beginPath(); ctx.arc(x + Math.cos(a) * dd, y + Math.sin(a) * dd * 0.8 + k * k * 14, 2.2 + (1 - k) * 1.8, 0, Math.PI * 2); ctx.fill();
       }
-      // a steel party keg with dark bands and a tap on top; rattles near the end
-      const late = p.life < 36 && (p.life >> 2) & 1, w = d.r + 0.4, h = d.r + 1.6, jig = late ? ((p.life >> 1) & 1 ? 0.6 : -0.6) : 0;
-      ctx.save(); ctx.translate(x + jig, y); ctx.rotate(p.rolling ? (p.spin / 2048) * Math.PI : 0);
-      ctx.fillStyle = '#100d16'; ctx.fillRect(-w - 0.8, -h - 0.8, (w + 0.8) * 2, (h + 0.8) * 2);
-      ctx.fillStyle = late ? '#e8a032' : '#b9c0cc'; ctx.fillRect(-w, -h, w * 2, h * 2);
-      ctx.fillStyle = '#e4e8ef'; ctx.fillRect(-w, -h, 1.6, h * 2);
-      ctx.fillStyle = '#6b7280'; ctx.fillRect(-w, -h + 1.2, w * 2, 1); ctx.fillRect(-w, h - 2.2, w * 2, 1); ctx.fillRect(-w, -0.5, w * 2, 1);
-      ctx.fillStyle = '#100d16'; ctx.fillRect(-1.4, -h - 2.6, 2.8, 2); ctx.fillRect(1, -h - 2.6, 2.6, 1);   // the tap
+      if (k < 0.15) { ctx.globalAlpha = 1 - k / 0.15; ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(x, y, R * 1.2, 0, Math.PI * 2); ctx.fill(); }
       ctx.restore();
       return;
     }

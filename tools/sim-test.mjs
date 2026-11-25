@@ -1509,11 +1509,17 @@ for (const hold of [0, 30]) {
   step(h, [BTN.SPECIAL, 0]); for (let i = 0; i < 60; i++) step(h, [0, 0]); const once = ha.percent;
   step(h, [BTN.SPECIAL, 0]); for (let i = 0; i < 60; i++) step(h, [0, 0]); const twice = ha.percent;
   check('Shotgun heals 3%, at most once every ten seconds', once === 270 && twice === 270, `${once / 10}% / ${twice / 10}%`);
-  // Keg Stand: pulls a keg, throws it forward, it bursts on them (9%)
+  // Bomb: Zeid's, held then thrown, blows up on them (7%)
   const k = mk(50); const ka = k.fighters[0];
-  step(k, [BTN.SPECIAL | BTN.DOWN, 0]); for (let i = 0; i < 30; i++) step(k, [0, 0]); const holding = ka.item === 'keg';
+  step(k, [BTN.SPECIAL | BTN.DOWN, 0]); for (let i = 0; i < 30; i++) step(k, [0, 0]); const holding = ka.item === 'bomb';
   step(k, [BTN.ATTACK, 0]); for (let i = 0; i < 90; i++) step(k, [0, 0]);
-  check('Keg Stand: holds a keg, throws it, it bursts on them (9%)', holding && k.fighters[1].percent === 90, `holding ${holding}, ${k.fighters[1].percent / 10}%`);
+  check('Marc has Zeid\'s Bomb: holds it, throws it, it blows up on them (7%)', holding && k.fighters[1].percent === 70, `holding ${holding}, ${k.fighters[1].percent / 10}%`);
+  // Shotgun: a long chug makes a bigger burp; held all the way it is Kamikaze
+  const hold = (n, dx = 14) => { const s = mk(dx); step(s, [BTN.SPECIAL, 0]); for (let i = 0; i < n; i++) step(s, [BTN.SPECIAL, 0]); for (let i = 0; i < 80; i++) step(s, [0, 0]); return s; };
+  const mid = hold(90).fighters[1].percent / 10;
+  const kz = hold(200, 40); const [km, kv] = kz.fighters;
+  check('Shotgun: a long chug burps harder; holding 3 seconds is Kamikaze (40% to them, Marc loses a stock)', mid > 9 && mid < 20 && kv.percent === 400 && km.stocks === 2,
+    `${mid}% after 1.5s / Kamikaze: them ${kv.percent / 10}%, Marc stocks ${km.stocks}`);
 }
 
 process.exit(fails ? 1 : 0);

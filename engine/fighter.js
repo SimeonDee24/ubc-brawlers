@@ -7,7 +7,7 @@ import { FX, approach, clamp, sinDeg, cosDeg, mulTrig, rngInt } from './fixed.js
 import { tossLift } from './projectiles.js';
 import { getCharacter } from '../characters/index.js';
 import { getStage } from '../stages/index.js';
-import { onPlatform } from './physics.js';
+import { onPlatform, koFighter } from './physics.js';
 import { spawnProjectile, countProjectiles, releaseItem } from './projectiles.js';
 import { placeHeld, releaseGrab, launchThrow, throwPos } from './grabs.js';
 import { THROWS, PUMMEL } from '../characters/shared.js';
@@ -635,6 +635,7 @@ const STATES = {
     if (mv.variant && mv.charge && f.stateFrame === mv.charge.at + 1 && f.charge >= mv.variant.minCharge) {
       f.move = mv.variant.move; f.anim = mv.variant.move; f.animFrame = f.stateFrame;
       mv = c.ch.moves[f.move];
+      if (mv.intangible) f.intangible = mv.intangible;
     }
     if (mv.fromLedge && f.ledge >= 0) {
       // Climbing up from the ledge, then stepping onto the stage.
@@ -719,6 +720,8 @@ const STATES = {
     if (mv.heal && f.stateFrame === mv.heal.frame && c.match.tick - f.lastHeal >= mv.heal.every) {
       f.percent = Math.max(0, f.percent - mv.heal.amount); f.lastHeal = c.match.tick;
     }
+    // self-destructing moves (Marc's Kamikaze): he loses a stock on this frame
+    if (mv.selfKo && f.stateFrame === mv.selfKo) { f.move = ''; f.item = ''; f.itemFuse = 0; koFighter(f); return; }
     // Header (Wii Fit Trainer style): tosses a ball up, hops, and heads it on
     // frame `at`. Pressing special again in `early` heads it sooner, at a
     // flatter, faster angle; shield in `cancel` lets the ball drop and ends the

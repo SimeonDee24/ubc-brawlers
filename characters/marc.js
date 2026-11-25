@@ -1,6 +1,7 @@
 // MARC SOLOMOSI — a ski bum who never misses a party. His side special is a
-// straight-line ski run; every other special and smash attack is a drink:
-// a shotgunned beer, a shaken can he rides up, a keg, a bottle, a pint.
+// straight-line ski run and his down special is Zeid's bomb; the rest are
+// drinks: a shotgunned beer (hold it all the way and he blows himself up,
+// like Hero's Kamikaze), a shaken can he rides up, a bottle, a pint.
 // He shares every normal attack, grab and throw with Simeon (same skeleton,
 // same animations); his look, a few stats, his smash attacks and his four
 // specials are his own.
@@ -126,8 +127,14 @@ const animations = {
     [10, { ...SPRAY, armF: [40, 30], face: 'smile' }],
     [16, AIR],
   ]),
-  // Keg Stand: pulls a keg out from behind his back and holds it up (Zeid's bomb pull).
-  keg: ZEID.animations.bomb,
+  // Kamikaze: arms thrown wide, glowing, then he goes off.
+  kamikaze: anim(false, [
+    [6, { hip: [0, 2], torso: -8, head: -16, armF: [100, 20], armB: [-100, -20], legF: [16, -10], legB: [-16, -10], handF: 'open', handB: 'open', face: 'yell' }],
+    [10, { hip: [0, 3], torso: -12, head: -22, armF: [130, 10], armB: [-130, -10], legF: [22, -14], legB: [-22, -14], handF: 'open', handB: 'open', face: 'yell' }],
+    [30, { hip: [0, 3], torso: -12, head: -22, armF: [134, 10], armB: [-134, -10], legF: [22, -14], legB: [-22, -14], handF: 'open', handB: 'open', face: 'yell' }],
+  ]),
+  // Bomb: Zeid's, exactly.
+  bomb: ZEID.animations.bomb,
   itemToss: ZEID.animations.itemToss,
   // --- Smash attacks ---
   // Bottle Smash: a beer bottle raised behind him and slammed down in front (Max's swing).
@@ -156,15 +163,21 @@ const hits = (from, to, list, damage, angle, bkb, kbg, extra) =>
   list.map(([at, r]) => hit(from, to, at, r, damage, angle, bkb, kbg, extra));
 
 const moves = {
-  // Neutral special: Shotgun. Cracks a hole in a can and slams it (heals 3%,
-  // at most once every 10 seconds), then lets out a massive burp in front of
-  // his face: 9%, sends them away. Slow, so it is a punish.
-  shotgun: { faf: 46, gear: { kind: 'beercan', from: 0, to: 30, active: [17, 28] },
+  // Neutral special: Shotgun. Hold the button and he keeps chugging; let go
+  // and he burps: 9% on a tap, up to 20% after a long chug. He heals 3% when
+  // he finishes (at most once every 10 seconds). Keep holding for the full
+  // 3 seconds and he goes Kamikaze (like Hero's): he glows, can't be hit,
+  // then blows up in a huge blast (40%, KOs early) and loses a stock himself.
+  shotgun: { faf: 46, charge: { at: 10, max: 180 }, variant: { minCharge: 180, move: 'kamikaze' },
+    gear: { kind: 'beercan', from: 0, to: 30, active: [17, 28] },
     heal: { frame: 14, amount: 30, every: 600 },
     hitboxes: [
-      hit(17, 20, 'neck', 9, 9, 45, 40, 78, { off: [12, 2] }),
-      hit(17, 22, 'neck', 7, 6, 45, 30, 70, { off: [24, 4] }),
+      hit(17, 20, 'neck', 9, 9, 45, 40, 78, { off: [12, 2], chargeScale: [90, 200] }),
+      hit(17, 22, 'neck', 7, 6, 45, 30, 70, { off: [24, 4], chargeScale: [60, 140] }),
     ] },
+  // (picks up on frame 11, when the full charge lets go)
+  kamikaze: { faf: 60, intangible: 40, gear: { kind: 'kamikaze', from: 11, to: 32 },
+    spawn: { frame: 30, from: 'chest', projectile: 'kamikaze' }, selfKo: 32, hitboxes: [] },
 
   // Side special: Send It. Clicks into his skis and bombs straight ahead in
   // a tuck, very fast (11%, ski tips first). Stays on the floor when used
@@ -189,14 +202,9 @@ const moves = {
       hit(30, 32, 'hip', 12, 5, 80, 50, 72, { group: 4, off: [0, 10] }),
     ] },
 
-  // Down special: Keg Stand. Pulls out a keg and holds it: he can walk, run
-  // and jump with it. Attack or special throws it (up, down, forward, or back
-  // by holding the other way; the smash button throws it hard), grab drops
-  // it. It bursts in a wave of foam when it touches an opponent or after 3
-  // seconds: 9%, launching up and away. Hold it too long and it bursts on
-  // him. He lets go of it if he is hit. One keg at a time.
-  keg: { faf: 26, limit: 1, pullItem: { frame: 13, kind: 'keg' }, hitboxes: [] },
-  itemToss: { faf: 22, toss: { frame: 6 }, hitboxes: [] },
+  // Down special: Bomb. Zeid's, exactly (see zeid.js).
+  bomb: ZEID.moves.bomb,
+  itemToss: ZEID.moves.itemToss,
 
   // --- Smash attacks (see simeon.js for how they are performed) ---
   // Forward: Bottle Smash. A beer bottle slammed down in front: 17%.
@@ -230,14 +238,13 @@ export const MARC = {
   trailColors: ['#d98a1c', '#ffd25a', '#fffdf2'],   // lager amber, gold, foam
   animations: { ...SIMEON.animations, ...animations },
   moves: { ...SIMEON.moves, ...moves },
-  specials: { neutral: 'shotgun', side: 'sendIt', up: 'shakenUp', down: 'keg' },
+  specials: { neutral: 'shotgun', side: 'sendIt', up: 'shakenUp', down: 'bomb' },
   projectiles: {
-    // a steel party keg: lobbed, bounces heavily, rolls, then bursts in foam
-    keg: { draw: 'keg', r: 5, hitPad: 1, speed: [0, 0], chargeSpeed: [0, 0],
-      gravity: px(0.19), maxFall: px(4.4), bounce: 90, bounceKeepX: 170, minBounce: px(0.9), maxBounces: 2,
-      rollFriction: px(0.05), minRollSpeed: 0, popUp: 0, life: 180, fadeFrames: 999,
-      // throws, [sideways, up]: forward, up, down, then the same thrown hard (smash)
-      toss: [[px(4.4), px(2.0)], [0, px(5.8)], [0, -px(4.8)], [px(6.8), px(1.0)], [0, px(7.8)], [0, -px(7.6)]], hit: { damage: 0, angle: 0, bkb: 0, kbg: 0 },
-      explode: { r: 24, frames: 16, hit: { damage: 90, angle: 75, bkb: 52, kbg: 56 } } },
+    bomb: ZEID.projectiles.bomb,
+    // the Kamikaze blast: goes off the moment it appears
+    kamikaze: { draw: 'kamikaze', silent: true, r: 1, hitPad: 0, speed: [0, 0], chargeSpeed: [0, 0],
+      gravity: 0, maxFall: 0, bounce: 0, bounceKeepX: 0, minBounce: 0, maxBounces: 0,
+      rollFriction: 0, minRollSpeed: 0, popUp: 0, life: 1, fadeFrames: 999, hit: { damage: 0, angle: 0, bkb: 0, kbg: 0 },
+      explode: { r: 58, frames: 28, hit: { damage: 400, angle: 50, bkb: 95, kbg: 78 } } },
   },
 };
