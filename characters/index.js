@@ -13,8 +13,9 @@ import { MATT } from './matt.js';
 import { GINGER } from './ginger.js';
 import { FAYBUA } from './faybua.js';
 import { MARC } from './marc.js';
+import { KIERAN } from './kieran.js';
 
-export const CHARACTERS = [SIMEON, KAELYN, LUCA, SARA, MALCOLM, MAX, OSAMA, ZEID, SAM, MATT, GINGER, FAYBUA, MARC];
+export const CHARACTERS = [SIMEON, KAELYN, LUCA, SARA, MALCOLM, MAX, OSAMA, ZEID, SAM, MATT, GINGER, FAYBUA, MARC, KIERAN];
 
 const byId = Object.fromEntries(CHARACTERS.map((c) => [c.id, c]));
 export const getCharacter = (id) => byId[id];

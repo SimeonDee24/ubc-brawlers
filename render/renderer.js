@@ -842,6 +842,85 @@ export class Renderer {
           ctx.globalAlpha = 1;
         }
       }
+    } else if (g.kind === 'car') {
+      // a little red sports car around his legs, wheels spinning, smoke off the back tyre
+      const x = f.x / FX, y = f.y / FX, roll = (fr * 3) & 3;
+      ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1);
+      for (let k = 0; k < 5; k++) {
+        const t = ((fr * 2 + k * 4) % 16) / 16;
+        ctx.globalAlpha = (1 - t) * 0.7; ctx.fillStyle = k & 1 ? '#d9dde4' : '#b8bec8';
+        ctx.beginPath(); ctx.arc(-16 - t * 16, -3 - t * 6, 2 + t * 4, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = OUT; ctx.beginPath(); ctx.moveTo(-16, -2); ctx.lineTo(-16, -10); ctx.lineTo(-6, -11); ctx.lineTo(-2, -16); ctx.lineTo(8, -16); ctx.lineTo(13, -11); ctx.lineTo(18, -9); ctx.lineTo(18, -2); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#d2343c'; ctx.beginPath(); ctx.moveTo(-15, -3); ctx.lineTo(-15, -9.4); ctx.lineTo(-6, -10.2); ctx.lineTo(13, -10.2); ctx.lineTo(17, -8.4); ctx.lineTo(17, -3); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#9fd8ff'; ctx.beginPath(); ctx.moveTo(4, -10.4); ctx.lineTo(8, -15); ctx.lineTo(9.5, -15); ctx.lineTo(12, -10.4); ctx.closePath(); ctx.fill();   // windscreen
+      ctx.fillStyle = '#ff8a7a'; ctx.fillRect(-15, -9.4, 32, 1.2);
+      ctx.fillStyle = '#ffe14a'; ctx.fillRect(15.6, -7.6, 1.6, 1.6);   // headlight
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(-4, -7.4, 10, 0.8);
+      for (const wx of [-9, 10]) {
+        ctx.fillStyle = OUT; ctx.beginPath(); ctx.arc(wx, -2.4, 3.4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#c9ced8'; ctx.beginPath(); ctx.arc(wx, -2.4, 1.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = OUT; ctx.fillRect(wx - 0.5 + (roll & 1 ? 0.6 : -0.6), -2.9 + (roll & 2 ? 0.6 : -0.6), 1, 1);
+      }
+      ctx.restore();
+    } else if (g.kind === 'ejector') {
+      // a car seat under him with a rocket flame blasting out of the bottom
+      const x = f.x / FX + dir * (s.hip[0] / FX), y = f.y / FX + s.hip[1] / FX + 4;   // the seat sits under his hips
+      ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1);
+      if (act >= 0) for (let k = 0; k < 10; k++) {
+        const j = k / 9, yy = 4 + j * 30, w = Math.sin(fr * 0.6 + k * 1.7) * (1 + j * 2);
+        ctx.globalAlpha = Math.max(0, 0.95 - j * 0.7); ctx.fillStyle = k % 3 === 0 ? '#fff3b0' : k % 3 === 1 ? '#ffb43a' : '#ff5a2a';
+        ctx.beginPath(); ctx.arc(w, yy, 3 + j * 3 - (k % 3 === 0 ? 1 : 0), 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = OUT; ctx.fillRect(-8, -6, 16, 6.5); ctx.fillRect(-10.5, -20, 6, 20);
+      ctx.fillStyle = '#2a2a33'; ctx.fillRect(-7.3, -5.3, 14.6, 5.1); ctx.fillRect(-9.8, -19.3, 4.6, 18.6);
+      ctx.fillStyle = '#d2343c'; ctx.fillRect(-9.8, -16, 4.6, 1.2); ctx.fillRect(-4, -5.3, 1.2, 5.1);
+      ctx.fillStyle = '#5a5f6b'; ctx.fillRect(-4, 0.5, 8, 2.5);
+      ctx.restore();
+    } else if (g.kind === 'camera') {
+      // a camera held out; then the flash goes off right in their face
+      held(() => {
+        ctx.fillStyle = OUT; ctx.fillRect(-4.6, 1, 9.2, 7.6);
+        ctx.fillStyle = '#2a2a33'; ctx.fillRect(-3.9, 1.7, 7.8, 6.2);
+        ctx.fillStyle = OUT; ctx.beginPath(); ctx.arc(0, 4.8, 2.8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#5b8cd4'; ctx.beginPath(); ctx.arc(0, 4.8, 1.7, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#c9ced8'; ctx.fillRect(-3.9, 1.7, 2, 1.2);
+      });
+      if (act >= 0) {
+        const a = (s.armF.low * Math.PI) / 180, ox = hx + dir * Math.sin(a) * 6, oy = hy + Math.cos(a) * 6;
+        ctx.save(); ctx.globalAlpha = Math.max(0, 1 - act);
+        ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + dir * (14 + act * 30), oy - 10 - act * 10); ctx.lineTo(ox + dir * (14 + act * 30), oy + 10 + act * 10); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.arc(ox + dir * 4, oy, 5 + (1 - act) * 5, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        this.star(ox + dir * 6, oy - 4, 8 + (1 - act) * 6, '#ffffff', '#fff3b0', fr * 0.3);
+      }
+    } else if (g.kind === 'peel') held(() => {
+      // a long wooden pizza peel, with a pizza riding on the blade
+      ctx.fillStyle = OUT; ctx.fillRect(-1.3, -3, 2.6, 13); ctx.fillRect(-5.6, 9, 11.2, 11);
+      ctx.fillStyle = '#c9925a'; ctx.fillRect(-0.6, -2.4, 1.2, 12); ctx.fillRect(-4.9, 9.7, 9.8, 9.6);
+      ctx.fillStyle = '#e0a868'; ctx.fillRect(-4.9, 9.7, 2, 9.6);
+      ctx.fillStyle = '#e8a23a'; ctx.beginPath(); ctx.arc(0, 14.5, 4.2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffd86a'; ctx.beginPath(); ctx.arc(0, 14.5, 3.3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#c8322b'; for (const [px0, py0] of [[-1.5, 13.2], [1.4, 14], [-0.3, 16.2]]) { ctx.beginPath(); ctx.arc(px0, py0, 0.8, 0, Math.PI * 2); ctx.fill(); }
+    });
+    else if (g.kind === 'burnout') {
+      // tyre smoke billowing out low on both sides, with bits of rubber
+      if (act >= 0) {
+        const fy = f.y / FX;
+        for (const side of [-1, 1]) {
+          for (let k = 0; k < 8; k++) {
+            const j = ((k * 37 + 11) % 10) / 10, x = f.x / FX + side * (8 + act * 20 + j * 12);
+            ctx.globalAlpha = Math.max(0, (1 - act) * 0.85); ctx.fillStyle = k & 1 ? '#d9dde4' : '#aeb4be';
+            ctx.beginPath(); ctx.arc(x, fy - 3 - j * 8 * act, 3 + act * 5 + j * 2, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.globalAlpha = Math.max(0, 1 - act); ctx.fillStyle = '#1b1b22';
+          for (let k = 0; k < 5; k++) ctx.fillRect(f.x / FX + side * (10 + act * (16 + k * 6)), fy - 2 - Math.sin(act * Math.PI) * (3 + k * 2), 1.6, 1.6);
+          ctx.fillRect(Math.min(f.x / FX, f.x / FX + side * (6 + act * 28)), fy - 0.8, 6 + act * 22, 1.2);   // skid mark
+        }
+        ctx.globalAlpha = 1;
+      }
     } else if (g.kind === 'kamikaze') {
       // about to go off: a swelling, flashing glow and sparks pulled in toward him
       const t = (fr - g.from) / (g.to - g.from), cx = f.x / FX, cy = f.y / FX - 22;
@@ -1471,6 +1550,30 @@ export class Renderer {
       ctx.fillStyle = '#100d16'; ctx.fillRect(x - 1, y - d.r - 2.2, 2, 2);          // the cap
       ctx.strokeStyle = '#c9b48a'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(x, y - d.r - 2); ctx.quadraticCurveTo(x + 2, y - d.r - 4, x + 2.5, y - d.r - 5); ctx.stroke();
       ctx.fillStyle = (p.life >> 1) & 1 ? '#ffd23f' : '#ff7a1c'; ctx.fillRect(x + 1.8, y - d.r - 6, 1.6, 1.6);   // spark
+      return;
+    }
+    if (d.draw === 'pizza') {
+      // a whole pizza spinning flat: crust, cheese, pepperoni going round
+      const sp = p.life * 0.5;
+      ctx.save(); ctx.globalAlpha = fade; ctx.translate(x, y); ctx.scale(1, 0.45);
+      ctx.fillStyle = '#100d16'; ctx.beginPath(); ctx.arc(0, 0, d.r + 1.6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#e8a23a'; ctx.beginPath(); ctx.arc(0, 0, d.r + 0.9, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffd86a'; ctx.beginPath(); ctx.arc(0, 0, d.r - 0.3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#c8322b';
+      for (let k = 0; k < 5; k++) { const a = sp + k * 1.257; ctx.beginPath(); ctx.arc(Math.cos(a) * d.r * 0.55, Math.sin(a) * d.r * 0.55, 1.1, 0, Math.PI * 2); ctx.fill(); }
+      ctx.restore();
+      return;
+    }
+    if (d.draw === 'dookie') {
+      // a dookie: a little brown swirl, with stink lines; fades out at the end
+      ctx.save(); ctx.globalAlpha = fade * Math.min(1, p.life / 20); ctx.translate(x, y + d.r);
+      const blob = (bx, by, w, h, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(bx, by, w, h, 0, 0, Math.PI * 2); ctx.fill(); };
+      blob(0, -1.6, 4.9, 2.2, '#100d16'); blob(0, -4.2, 3.7, 1.9, '#100d16'); blob(0.3, -6.4, 2.5, 1.6, '#100d16');
+      blob(0, -1.6, 4.2, 1.6, '#6b4226'); blob(0, -4.2, 3, 1.3, '#7d5030'); blob(0.3, -6.4, 1.8, 1.1, '#8f5f3a');
+      ctx.fillStyle = '#100d16'; ctx.fillRect(0.4, -8.6, 1, 1.2);
+      ctx.fillStyle = '#a7c46a'; ctx.globalAlpha *= 0.8;
+      for (let k = 0; k < 3; k++) { const t = ((p.life + k * 9) % 27) / 27; ctx.fillRect(-3 + k * 3 + Math.sin(t * 6 + k) * 1, -9 - t * 8, 0.8, 2); }
+      ctx.restore();
       return;
     }
     if (d.draw === 'kamikaze') {

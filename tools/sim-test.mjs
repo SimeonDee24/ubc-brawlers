@@ -782,7 +782,7 @@ for (const hold of [0, 30]) {
 // Roster: two fighters, two skins each, sharing every normal attack
 {
   const { CHARACTERS } = await import('../characters/index.js');
-  check('thirteen characters with two skins each', CHARACTERS.length === 13 && CHARACTERS.every((c) => c.palettes.length === 2), CHARACTERS.map((c) => c.name + ':' + c.palettes.length).join(' '));
+  check('fourteen characters with two skins each', CHARACTERS.length === 14 && CHARACTERS.every((c) => c.palettes.length === 2), CHARACTERS.map((c) => c.name + ':' + c.palettes.length).join(' '));
   const [sim, kae, luc] = CHARACTERS;
   const shared = ['jab1', 'ftilt', 'utilt', 'dtilt', 'dashAttack', 'nair', 'fair', 'bair', 'uair', 'dair', 'grab'];
   check('Kaelyn shares all normals, grabs and throws with Simeon', shared.every((m) => kae.moves[m] === sim.moves[m]) && kae.throws === sim.throws);
@@ -1520,6 +1520,32 @@ for (const hold of [0, 30]) {
   const kz = hold(200, 40); const [km, kv] = kz.fighters;
   check('Shotgun: a long chug burps harder; holding 3 seconds is Kamikaze (40% to them, Marc loses a stock)', mid > 9 && mid < 20 && kv.percent === 400 && km.stocks === 2,
     `${mid}% after 1.5s / Kamikaze: them ${kv.percent / 10}%, Marc stocks ${km.stocks}`);
+}
+
+// Kieran: photography, cars, pizza and dookie
+{
+  const { getCharacter } = await import('../characters/index.js');
+  const kr = getCharacter('kieran'), sim = getCharacter('simeon');
+  check('Kieran has his own smashes and specials', ['fsmash', 'usmash', 'dsmash'].every((m) => kr.moves[m] !== sim.moves[m]) && ['neutral', 'side', 'up', 'down'].every((k) => kr.moves[kr.specials[k]] && kr.animations[kr.specials[k]]));
+  const mk = (dx = 26, dy = 0) => { const s = createMatch({ ...setup, players: [{ charId: 'kieran', alt: 0 }, { charId: 'simeon', alt: 1 }] }); const [a, v] = s.fighters; v.x = a.x + dx * FX; v.y += dy * FX; if (dy) { v.grounded = 0; v.ground = -1; } return s; };
+  const run = (s, first, n = 80) => { step(s, [first, 0]); for (let i = 0; i < n; i++) step(s, [0, 0]); return s.fighters[1].percent / 10; };
+  TEST_CONFIG.SMASH_FLICK_FRAMES = FLICK;
+  const f = run(mk(28), BTN.SMASH), u = run(mk(3, -40), BTN.SMASH | BTN.UP), d1 = run(mk(-18), BTN.SMASH | BTN.DOWN), d2 = run(mk(18), BTN.SMASH | BTN.DOWN);
+  check('Say Cheese 15%, Pizza Peel 15%, Burnout 14% behind and in front', f === 15 && u === 15 && d1 === 14 && d2 === 14, `${f}% / ${u}% / ${d1}% / ${d2}%`);
+  TEST_CONFIG.SMASH_FLICK_FRAMES = 0;
+  const pz = run(mk(80), BTN.SPECIAL, 60), car = run(mk(60), BTN.SPECIAL | BTN.RIGHT, 60);
+  const d = mk(400); const da = d.fighters[0], x0 = da.x; step(d, [BTN.SPECIAL | BTN.RIGHT, 0]); for (let i = 0; i < 60; i++) step(d, [0, 0]);
+  const o = mk(400); const oa = o.fighters[0], y0 = oa.y; step(o, [BTN.SPECIAL | BTN.UP, 0]); let top = 0; for (let i = 0; i < 60; i++) { step(o, [0, 0]); top = Math.max(top, (y0 - oa.y) / FX); }
+  check('Pizza Toss 6%; Drift drives into them (11%) and covers ground; Ejector Seat blasts up', pz === 6 && car === 11 && (da.x - x0) / FX > 90 && top > 80 && top < 170,
+    `${pz}% / ${car}% drove ${Math.round((da.x - x0) / FX)}px / up ${Math.round(top)}px`);
+  // Dookie: stays on the floor; Simeon walks into it 3 seconds later and slips (6%)
+  const p = mk(90); step(p, [BTN.SPECIAL | BTN.DOWN, 0]); for (let i = 0; i < 40; i++) step(p, [0, 0]);
+  for (let i = 0; i < 40; i++) step(p, [BTN.LEFT, 0]);
+  for (let i = 0; i < 100; i++) step(p, [0, 0]);
+  const still = (p.projectiles || []).filter((q) => q.kind === 'dookie').length === 1;
+  const pv = p.fighters[1];
+  for (let i = 0; i < 50; i++) step(p, [0, BTN.LEFT]);
+  check('Dookie sits on the floor, and stepping in it is 6%', still && pv.percent === 60, `on the floor after 3s: ${still}, ${pv.percent / 10}%`);
 }
 
 process.exit(fails ? 1 : 0);

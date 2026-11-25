@@ -134,9 +134,10 @@ export function stepProjectiles(state) {
       p.spin += p.vx;
       p.vx = approach(p.vx, 0, d.rollFriction);
       p.x += p.vx;
+      // (`settle`: a trap left on the floor stays for its whole life once it stops)
       const s = stage.solids[p.rolling - 1];
       if (p.x < s.x * FX || p.x > (s.x + s.w) * FX) p.rolling = 0;   // rolled off the edge
-      if (p.vx === 0) p.life = Math.min(p.life, d.fadeFrames);
+      if (p.vx === 0 && !d.settle) p.life = Math.min(p.life, d.fadeFrames);
     } else {
       p.spin += p.vx;
       p.vy = Math.min(p.vy + d.gravity, d.maxFall);

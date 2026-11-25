@@ -1,5 +1,5 @@
 {
-  "version": "0.55.1",
+  "version": "0.56.0",
   "modules": [
     "config/config.js",
     "config/version.js",
@@ -17,6 +17,7 @@
     "characters/ginger.js",
     "characters/index.js",
     "characters/kaelyn.js",
+    "characters/kieran.js",
     "characters/library.js",
     "characters/luca.js",
     "characters/malcolm.js",
